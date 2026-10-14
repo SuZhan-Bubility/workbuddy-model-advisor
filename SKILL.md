@@ -1,6 +1,8 @@
 ---
 name: workbuddy-model-advisor
+slug: workbuddy-model-advisor
 display_name: 模型推荐助手
+displayName: 模型推荐助手
 display_name_en: Model Advisor for WorkBuddy
 description: 【WorkBuddy / CodeBuddy 技能】模型推荐助手 model-advisor —— 开工前按任务类型推荐最合适的大模型与思考强度，输出双角度「推荐卡」（做到最好 / 性价比最高），含积分费率、折扣、上下文长度、性价比星级与选择理由。**仅在用户显式说出"推荐大模型"时使用**（也兼容"用什么模型/哪个模型合适/选哪个模型/选什么模型/模型推荐/你来推荐大模型/这活该用哪个模型"等变体）；用户没提这一句时绝不主动弹卡。⚠️ **本 skill 是一个「检查点」，不是可顺带完成的小步骤：弹完卡片必须立即结束本轮回复，等用户到界面切好模型再继续原任务；即使同一条提示词里还带着"爬论文/做研究/做PPT"等任务要求，也严禁在同一轮里往下做。** 数据实时读取本机 WorkBuddy 模型配置（未安装客户端时回退到内置兜底清单），费率与折扣自动跟上，无需手动维护。**适用范围：WorkBuddy / CodeBuddy。**
 description_zh: 开工前按任务类型推荐最合适的大模型与思考强度，输出双角度「推荐卡」（做到最好 / 性价比最高），自动读取本机费率与折扣，无需手动维护。
