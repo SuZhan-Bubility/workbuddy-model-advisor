@@ -74,12 +74,12 @@ def fee_html(p, ac):
 def pick_block(p, angle, first, theme):
     ac = ANGLE_COLOR[angle]
     e = p["effort"]
-    use_lbl = EFFORT_LABEL.get(e.get("use"), e.get("use"))
-    eff_line = f'用模型默认 <b style="color:{ac["fg"]}">{use_lbl}</b>，不用调'
+    rec_lbl = EFFORT_LABEL.get(e.get("recommend"), e.get("recommend"))
+    eff_line = f'推荐 <b style="color:{ac["fg"]}">「{rec_lbl}」</b>'
     eff_detail = html.escape(e.get("reason", ""))
-    hint_txt = (e.get("hint") or "").strip()
-    hint_html = (f'<div style="margin-top:4px;color:#b45309;">可选：{html.escape(hint_txt)}</div>'
-                 if hint_txt else "")
+    cmp_txt = (e.get("compare") or "").strip()
+    cmp_html = (f'<div style="margin-top:3px;color:#475569;">{html.escape(cmp_txt)}</div>'
+                if cmp_txt else "")
     if first:
         box = f'background:{ac["bg"]};border:2px solid {ac["bd"]};'
         name_c = ac["fg"]
@@ -100,7 +100,7 @@ def pick_block(p, angle, first, theme):
         <div style="margin-top:6px;padding:5px 8px;background:rgba(255,255,255,.7);border-radius:5px;font-size:10.5px;color:#475569;line-height:1.5;">
           <span style="font-weight:700;color:#0f172a;">思考强度：</span>{eff_line}<br>
           <span style="color:#64748b;">{eff_detail}</span>
-          {hint_html}
+          {cmp_html}
         </div>
         <div style="margin-top:6px;font-size:10.5px;color:#475569;line-height:1.5;">{reason}</div>
       </div>'''
@@ -134,12 +134,12 @@ def build_html(card, theme):
     _picks = card["angles"]["best"].get("picks") or []
     top_pick = _picks[0] if _picks else {}
     top_name = top_pick.get("name") or ""
-    _eff_raw = (top_pick.get("effort") or {}).get("use") or ""
+    _eff_raw = (top_pick.get("effort") or {}).get("recommend") or ""
     top_eff = EFFORT_LABEL.get(_eff_raw, _eff_raw)
 
     if top_name and top_eff:
-        action = (f'建议切到「<b>{html.escape(top_name)}</b>」，思考强度保持默认'
-                  f'「<b>{html.escape(top_eff)}</b>」即可，然后回我一句「<b>继续</b>」，我接着把原来的活干完。')
+        action = (f'建议切到「<b>{html.escape(top_name)}</b>」，思考强度按建议设为'
+                  f'「<b>{html.escape(top_eff)}</b>」，然后回我一句「<b>继续</b>」，我接着把原来的活干完。')
     elif top_name:
         action = (f'建议切到「<b>{html.escape(top_name)}</b>」，然后回我一句「<b>继续</b>」，'
                   f'我接着把原来的活干完。')
@@ -183,7 +183,8 @@ def build_html(card, theme):
       ※ 费率来自本机服务端下发快照（自动更新）；标「原价→折扣」的模型表示历史快照中出现过两档价，折扣一般在非高峰时段生效。<br>
       ※ 拼最好＝成本维度按原价算（不计成本求最优）；拼性价比＝成本维度按折扣价算（错峰后的真实划算度）。<br>
       ※ 思考强度随任务类型而不同（爬取偏轻、研究与代码偏重、写作/PPT/调研居中）——这是有意为之，不是笔误。<br>
-      ※ 但默认值通常够用，本卡不要求你调整强度；只有需求与默认差距很大时，才会多给一句可选项。<br>
+      ※ 推荐档位由任务类型算出；「模型默认」是该模型自身的设置。两者不一致时按推荐调整更稳，不调整也能跑。<br>
+      ※ 性价比分数按各模型默认强度折算；若统一按推荐档位调整，各模型同幅变动，排序不变。<br>
       ※ 思考强度影响实际 token 消耗：想得越久越贵。本机配置不含各档费率倍率，故只给相对建议，不给精确倍数。<br>
       ※ 模型清单与计费实时读取本机配置；此卡只做建议，最终由你在界面下拉框选择（含思考强度）。<br>
       ※ 数据源：{html.escape(str(card.get("data_source", "")))}

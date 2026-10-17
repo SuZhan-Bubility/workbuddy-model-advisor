@@ -8,7 +8,7 @@ description: 实现根据你的提示词描述的任务类型，推荐最合适�
 description_zh: 实现根据你的提示词描述的任务类型推荐最合适的大模型。按任务类型给出双角度推荐（做到最好 / 性价比最高），带积分费率、上下文长度与思考强度建议。说「推荐大模型」即可触发，弹卡后停下等你切模型。
 description_en: Recommends the best LLM based on the task type described in your prompt (WorkBuddy / CodeBuddy only). Gives two angles — best quality and best value — each with live pricing, context size and a suggested reasoning effort, then pauses for you to switch models.
 category: productivity
-version: 1.0.6
+version: 1.0.7
 author: SuZhan-Bubility
 ---
 
@@ -108,15 +108,16 @@ author: SuZhan-Bubility
 
 **所以"不同任务推荐不同强度"是对的，不要把它当成不一致。**
 
-### 但本 skill 不要求你去改强度
+### 卡片怎么呈现强度
 
-卡片一律按**模型默认强度**给建议，理由是：
+- **主显示：按任务类型算出的推荐档位**（低 / 中 / 高）——不同任务必然不同，这是本 skill 的核心判断之一
+- **对照显示：该模型自身的默认档位**
+- 两者一致 → 写"模型默认也是「中」，无需调整"
+- 两者不一致 → 给出调整建议（升/降），并注明"不调整也能跑"
 
-1. **口径自洽** —— 性价比分数本来就是按默认强度折算的，改过强度账就对不上
-2. **少一步操作、少一个出错点** —— 用户改完模型忘改强度，是常见坑
-3. **平台默认值不是随便填的** —— 是厂商定的平衡点，多数任务够用
+**为什么不再一律给默认值**：本机 46 个模型的默认强度全是 medium，若只显示默认值，八类任务在卡面上会完全一样，用户看不到任务差异。推荐档位才是这张卡要传达的信息。
 
-只有在「任务需求」与「模型默认」相差 **2 档及以上**时（例如研究任务碰上默认极低的模型），才会多给一句浅色可选提示，且明确写"不调也能跑"。
+**诚实边界**：性价比分数按各模型默认强度折算；若统一按推荐档位调整，各模型同幅变动，排序不变。这点要写进脚注，别让用户觉得"分数和实际花费对不上"。
 
 ### 技术事实（写理由时别编）
 

@@ -407,31 +407,36 @@ def star(score, top):
 
 def suggest_effort(model, task_type):
     """
-    强度口径（2026-10-17 起）：
-      - 任务类型决定"需求强度"，但**不强制用户去改**
-      - 卡片一律按模型的**默认强度**给建议（"用默认，不用调"）
-      - 只有需求与默认相差 ≥2 档时，才追加一句可选提示
-    这样卡片上的性价比分数（本来就按默认强度算）与用户实际花费完全一致。
+    强度口径（v1.0.7 起）：
+      - **主口径 = 任务类型的推荐档位**（爬取低 / 研究·代码高 / 其余中）
+      - 模型默认档位作为**对照**展示：
+          · 一致 → "默认即是，无需调整"
+          · 不一致 → 给出调整建议，并注明"不调也能跑"
+    这样不同任务在卡面上会给出不同的推荐强度，差异可见。
     """
     demand = EFFORT_DEMAND.get(task_type, "medium")
     default = model.get("default_effort", "medium")
     dr, mv = EFFORT_RANK.get(demand, 2), EFFORT_RANK.get(default, 2)
-    gap = dr - mv
+    same = (dr == mv)
+    d_lbl = EFFORT_LABEL_CN.get(demand, demand)
+    m_lbl = EFFORT_LABEL_CN.get(default, default)
 
-    hint = ""
-    if gap >= 2:
-        hint = (f"这类任务偏重深度推理，默认「{EFFORT_LABEL_CN.get(default, default)}」"
-                f"可能不够扎实，可手动升到「{EFFORT_LABEL_CN.get(demand, demand)}」；不升也能跑。")
-    elif gap <= -2:
-        hint = (f"这类任务偏轻，默认「{EFFORT_LABEL_CN.get(default, default)}」"
-                f"会多耗积分，可手动降到「{EFFORT_LABEL_CN.get(demand, demand)}」；不降也能跑。")
+    if same:
+        compare = f"模型默认也是「{m_lbl}」，无需调整。"
+    elif dr > mv:
+        compare = (f"模型默认是「{m_lbl}」，建议手动升到「{d_lbl}」；"
+                   f"想先省一点也可以按默认跑一遍。")
+    else:
+        compare = (f"模型默认是「{m_lbl}」，建议手动降到「{d_lbl}」；"
+                   f"不降也能跑，只是会多花一点积分。")
 
     return {
-        "demand": demand,                                  # 该任务类型的需求强度
-        "model_default": default,                          # 该模型默认强度
-        "use": default,                                    # 建议实际使用：就是默认值
-        "reason": EFFORT_REASON.get(task_type, ""),        # 为什么这个任务是这个强度
-        "hint": hint,                                      # 仅差距≥2档时非空
+        "demand": demand,               # 任务需求强度（内部用）
+        "model_default": default,       # 该模型默认强度
+        "recommend": demand,            # 主口径：推荐给用户的档位
+        "reason": EFFORT_REASON.get(task_type, ""),
+        "compare": compare,             # 与默认值的对照说明
+        "same": same,
     }
 
 
@@ -566,9 +571,8 @@ def main():
                 if p.get("credits_peak") is not None:
                     basis = "按折扣价评分" if p.get("scored_on") == "offpeak" else "按原价评分"
                     print(f"      费率：原价 x{p['credits_peak']} / 折扣 x{p['credits_offpeak']}（省 {p['discount_pct']}%，本推荐{basis}）")
-                print(f"      思考强度：用模型默认「{EFFORT_LABEL_CN.get(e['use'], e['use'])}」，不用调 — {e['reason']}")
-                if e.get("hint"):
-                    print(f"      可选提示：{e['hint']}")
+                print(f"      思考强度：推荐「{EFFORT_LABEL_CN.get(e['recommend'], e['recommend'])}」— {e['reason']}")
+                print(f"                {e['compare']}")
             print()
 
 
