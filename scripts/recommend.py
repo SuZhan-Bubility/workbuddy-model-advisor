@@ -124,7 +124,7 @@ EXCLUDE_KEYWORDS = (
 # best 权重 = 能力优先；value 权重 = 能力÷成本优先
 TASK_PROFILES = {
     "crape": {
-        "name": "论文/文章批量爬取",
+        "name": "批量爬取（论文/文章）",
         "features": "量大 · 重复 · 单篇不长 · 成本敏感",
         "best_weights":  {"ability": 0.40, "context": 0.35, "cost": 0.25},
         "value_weights": {"ability": 0.28, "context": 0.27, "cost": 0.45},
@@ -139,10 +139,50 @@ TASK_PROFILES = {
     },
     "survey": {
         "name": "产业链调研（读图+结构化）",
-        "features": "多源整合 · 要读图表截图 · 要出结构化报告",
+        "features": "多源整合 · 要读图表截图 · 要出结构化结论",
         "best_weights":  {"ability": 0.45, "visual": 0.25, "context": 0.20, "cost": 0.10},
         "value_weights": {"ability": 0.32, "visual": 0.23, "context": 0.20, "cost": 0.25},
         "prefer_visual": True,
+    },
+    "ppt": {
+        "name": "PPT / 演示文稿生成",
+        "features": "长文压成大纲 · 要读图排版 · 要结构化输出",
+        "best_weights":  {"ability": 0.50, "visual": 0.22, "context": 0.20, "cost": 0.08},
+        "value_weights": {"ability": 0.38, "visual": 0.20, "context": 0.18, "cost": 0.24},
+        "prefer_visual": True,
+    },
+    "video": {
+        "name": "视频生成（脚本/分镜/剪辑）",
+        "features": "创意脚本 · 分镜描述 · 多模态理解 · 依赖工具调用",
+        "best_weights":  {"ability": 0.48, "visual": 0.24, "context": 0.16, "cost": 0.12},
+        "value_weights": {"ability": 0.36, "visual": 0.22, "context": 0.15, "cost": 0.27},
+        "prefer_visual": True,
+    },
+    "code": {
+        "name": "写代码 / 调试 / 重构",
+        "features": "代码能力优先 · 要读长上下文 · 常需多轮改",
+        "best_weights":  {"ability": 0.62, "context": 0.28, "cost": 0.10},
+        "value_weights": {"ability": 0.45, "context": 0.25, "cost": 0.30},
+        "prefer_visual": False,
+        # 代码场景单独校准：代码专精型号上浮，通用旗舰维持原档
+        "ability_override": {
+            "kimi-k2.7": 0.94, "kimi-k3-1": 0.92, "deepseek-v4-pro": 0.90,
+            "glm-5.2": 0.89, "minimax-m3": 0.82, "deepseek-v4-flash": 0.74,
+        },
+    },
+    "writing": {
+        "name": "写报告 / 文档 / 文案",
+        "features": "中文表达 · 结构清晰 · 长短可控 · 偶要读资料",
+        "best_weights":  {"ability": 0.55, "context": 0.30, "cost": 0.15},
+        "value_weights": {"ability": 0.42, "context": 0.26, "cost": 0.32},
+        "prefer_visual": False,
+    },
+    "general": {
+        "name": "通用任务（未识别类型）",
+        "features": "无明确倾向 · 日常问答与轻量处理",
+        "best_weights":  {"ability": 0.50, "context": 0.30, "cost": 0.20},
+        "value_weights": {"ability": 0.38, "context": 0.27, "cost": 0.35},
+        "prefer_visual": False,
     },
 }
 
@@ -159,12 +199,30 @@ ABILITY = {
 }
 
 EFFORT_RANK = {"minimal": 0, "low": 1, "medium": 2, "high": 3}
+EFFORT_LABEL_CN = {"minimal": "极低", "low": "低", "medium": "中", "high": "高"}
 
-# 任务对"思考强度"的需求
+# 任务对"思考强度"的需求 —— 强度由任务类型决定，这是设计而非缺陷
 EFFORT_DEMAND = {
-    "crape": "low",      # 批量任务，逐篇短，低强度足够，省 token
-    "research": "high",  # 深度推理，必须开高
-    "survey": "medium",  # 整合类，中档够用
+    "crape": "low",       # 批量逐条处理，不需要长时间思考
+    "research": "high",   # 深度推理，长链条论证
+    "survey": "medium",   # 多源整合，中等推理
+    "ppt": "medium",      # 结构化整理
+    "video": "medium",    # 创意脚本与分镜
+    "code": "high",       # 推理深度直接影响代码正确率
+    "writing": "medium",  # 写作表达
+    "general": "medium",  # 通用任务
+}
+
+# 每个任务类型"为什么是这个强度"的一句话解释（写进卡片）
+EFFORT_REASON = {
+    "crape": "批量逐条处理，单条不需要长时间思考，开高了只是多烧积分",
+    "research": "深度推理任务，长链条论证，强度直接影响结论质量",
+    "survey": "多源整合类任务，中等推理足够，复杂图表时可临时调高",
+    "ppt": "把长文压成结构，中等推理足够，重点在排版与取舍",
+    "video": "创意脚本与分镜，中等推理足够，重点在画面描述",
+    "code": "代码任务容错低，推理越深越少返工",
+    "writing": "写作类任务，中等推理足够，重点在表达与结构",
+    "general": "通用任务，中等档通常是最稳妥的平衡点",
 }
 
 
@@ -302,7 +360,9 @@ def score_models(models, task_type, angle, use_offpeak=False):
 
     results = []
     for m in models:
-        ab = ABILITY.get(m["id"], 0.55)
+        ab = prof.get("ability_override", {}).get(m["id"])
+        if ab is None:
+            ab = ABILITY.get(m["id"], 0.55)
         vis = 0.9 if (prof["prefer_visual"] and m["img"]) else (0.5 if m["img"] else 0.2)
         ec = EFFORT_COST_FACTOR.get(m["default_effort"], 1.25)
         raw_cost = _cost_of(m) if _cost_of(m) is not None else mid
@@ -345,28 +405,33 @@ def star(score, top):
     return 1
 
 
-def effort_note(demand, default, task_type):
-    dr, mv = EFFORT_RANK.get(demand, 2), EFFORT_RANK.get(default, 2)
-    if task_type == "crape":
-        if mv > dr:
-            return f"该模型默认强度为 {default}（偏高），批量任务建议手动降到中/低档省 token"
-        return "批量任务，中低强度足够，不必开高"
-    if task_type == "research":
-        if mv < dr:
-            return f"深度推理任务，建议手动开到高强度（模型默认 {default}，偏低）"
-        return f"深度推理任务，保持高强度（模型默认即 {default}）"
-    if task_type == "survey":
-        return f"整合类任务，中档够用（模型默认 {default}）；图表特别复杂时可临时开高"
-    return ""
-
-
 def suggest_effort(model, task_type):
-    demand = EFFORT_DEMAND[task_type]
+    """
+    强度口径（2026-10-17 起）：
+      - 任务类型决定"需求强度"，但**不强制用户去改**
+      - 卡片一律按模型的**默认强度**给建议（"用默认，不用调"）
+      - 只有需求与默认相差 ≥2 档时，才追加一句可选提示
+    这样卡片上的性价比分数（本来就按默认强度算）与用户实际花费完全一致。
+    """
+    demand = EFFORT_DEMAND.get(task_type, "medium")
     default = model.get("default_effort", "medium")
+    dr, mv = EFFORT_RANK.get(demand, 2), EFFORT_RANK.get(default, 2)
+    gap = dr - mv
+
+    hint = ""
+    if gap >= 2:
+        hint = (f"这类任务偏重深度推理，默认「{EFFORT_LABEL_CN.get(default, default)}」"
+                f"可能不够扎实，可手动升到「{EFFORT_LABEL_CN.get(demand, demand)}」；不升也能跑。")
+    elif gap <= -2:
+        hint = (f"这类任务偏轻，默认「{EFFORT_LABEL_CN.get(default, default)}」"
+                f"会多耗积分，可手动降到「{EFFORT_LABEL_CN.get(demand, demand)}」；不降也能跑。")
+
     return {
-        "demand": demand,
-        "model_default": default,
-        "note": effort_note(demand, default, task_type),
+        "demand": demand,                                  # 该任务类型的需求强度
+        "model_default": default,                          # 该模型默认强度
+        "use": default,                                    # 建议实际使用：就是默认值
+        "reason": EFFORT_REASON.get(task_type, ""),        # 为什么这个任务是这个强度
+        "hint": hint,                                      # 仅差距≥2档时非空
     }
 
 
@@ -430,19 +495,28 @@ def build_card(task_type, models, plan=None):
 
 
 def detect_task(query):
-    q = query.lower()
-    if any(k in q for k in ["爬", "抓取", "批量", "采集", "收集", "爬虫", "fetch", "crawl"]):
-        return "crape"
-    if any(k in q for k in ["调研", "产业链", "产业", "市场", "报告", "图谱", "survey"]):
-        return "survey"
-    if any(k in q for k in ["研究", "分析", "推理", "论证", "系统级", "机理", "原理"]):
-        return "research"
-    return "crape"
+    """按关键词判定任务类型。顺序即优先级：越具体的越靠前。"""
+    q = (query or "").lower()
+    rules = [
+        ("video",    ["视频", "剪辑", "分镜", "短视频", "数字人", "video"]),
+        ("ppt",      ["ppt", "幻灯片", "演示文稿", "汇报材料", "slide", "deck"]),
+        ("crape",    ["爬", "抓取", "批量", "采集", "收集", "爬虫", "fetch", "crawl"]),
+        ("code",     ["代码", "脚本", "编程", "函数", "重构", "报错", "debug", "bug"]),
+        ("research", ["研究", "分析", "推理", "论证", "系统级", "机理", "原理"]),
+        ("survey",   ["调研", "产业链", "产业", "市场", "图谱", "survey"]),
+        ("writing",  ["写报告", "报告", "文案", "写作", "润色", "文章", "公众号", "文档", "总结", "写一份"]),
+    ]
+    for tt, kws in rules:
+        if any(k in q for k in kws):
+            return tt
+    return "general"
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--task-type", default=None, choices=["crape", "research", "survey", "auto"])
+    ap.add_argument("--task-type", default=None,
+                    choices=["crape", "research", "survey", "ppt", "video",
+                             "code", "writing", "general", "auto"])
     ap.add_argument("--query", default="")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--json", action="store_true")
@@ -467,7 +541,7 @@ def main():
     if tt == "auto" or tt is None:
         tt = detect_task(args.query or "")
         if tt not in TASK_PROFILES:
-            tt = "crape"
+            tt = "general"
 
     card = build_card(tt, models, plan)
     card["data_source"] = src
@@ -492,7 +566,9 @@ def main():
                 if p.get("credits_peak") is not None:
                     basis = "按折扣价评分" if p.get("scored_on") == "offpeak" else "按原价评分"
                     print(f"      费率：原价 x{p['credits_peak']} / 折扣 x{p['credits_offpeak']}（省 {p['discount_pct']}%，本推荐{basis}）")
-                print(f"      思考强度：建议 {e['demand']}（模型默认 {e['model_default']}）— {e['note']}")
+                print(f"      思考强度：用模型默认「{EFFORT_LABEL_CN.get(e['use'], e['use'])}」，不用调 — {e['reason']}")
+                if e.get("hint"):
+                    print(f"      可选提示：{e['hint']}")
             print()
 
 
