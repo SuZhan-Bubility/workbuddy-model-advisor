@@ -125,6 +125,22 @@ def build_html(card, theme):
     period_fg = "#92400e" if is_peak else "#166534"
     snap = card.get("fee_snapshot", {}).get("captured_at", "")
 
+    # 暂停提示里要给出"具体动作"：主推哪个模型、强度几档
+    _picks = card["angles"]["best"].get("picks") or []
+    top_pick = _picks[0] if _picks else {}
+    top_name = top_pick.get("name") or ""
+    _eff_raw = (top_pick.get("effort") or {}).get("demand") or ""
+    top_eff = EFFORT_LABEL.get(_eff_raw, _eff_raw)
+
+    if top_name and top_eff:
+        action = (f'建议切到「<b>{html.escape(top_name)}</b>」，思考强度设为'
+                  f'「<b>{html.escape(top_eff)}</b>」，然后回我一句「<b>继续</b>」，我接着把原来的活干完。')
+    elif top_name:
+        action = (f'建议切到「<b>{html.escape(top_name)}</b>」，然后回我一句「<b>继续</b>」，'
+                  f'我接着把原来的活干完。')
+    else:
+        action = '选好之后回我一句「<b>继续</b>」，我接着把原来的活干完。'
+
     return f'''<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8"><title>模型推荐卡 · {html.escape(card["task_name"])}</title></head>
 <body style="margin:0;padding:16px;background:#eef2f7;font-family:system-ui,-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;">
@@ -132,6 +148,14 @@ def build_html(card, theme):
     <div style="background:linear-gradient(90deg,{t["c1"]},{t["c2"]});padding:15px 22px;">
       <div style="font-size:15.5px;font-weight:700;color:#fff;">模型推荐卡｜{html.escape(card["task_name"])}</div>
       <div style="font-size:11px;color:rgba(255,255,255,.88);margin-top:3px;">任务特征：{html.escape(card["features"])} ｜ 两个角度：拼最好 / 拼性价比</div>
+    </div>
+    <div style="background:#fffbeb;border-bottom:1px solid #fde68a;padding:11px 22px;">
+      <div style="font-size:12.5px;font-weight:700;color:#92400e;">先停一下 —— 任务已暂停，等你定好模型</div>
+      <div style="margin-top:5px;font-size:11.5px;color:#78350f;line-height:1.75;">
+        卡上写清了选哪个、为什么选它；真正动手切换，在输入框上方的模型下拉框里。
+        {action}
+        暂时不想换也可以，直接说一句「继续」，我按原样往下做。
+      </div>
     </div>
     <div style="padding:11px 18px 0;">
       <div style="display:flex;gap:7px;flex-wrap:wrap;font-size:10.5px;">

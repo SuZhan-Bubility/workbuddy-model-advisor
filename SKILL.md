@@ -8,7 +8,7 @@ description: 实现根据你的提示词描述的任务类型，推荐最合适�
 description_zh: 实现根据你的提示词描述的任务类型推荐最合适的大模型。按任务类型给出双角度推荐（做到最好 / 性价比最高），带积分费率、上下文长度与思考强度建议。说「推荐大模型」即可触发，弹卡后停下等你切模型。
 description_en: Recommends the best LLM based on the task type described in your prompt (WorkBuddy / CodeBuddy only). Gives two angles — best quality and best value — each with live pricing, context size and a suggested reasoning effort, then pauses for you to switch models.
 category: productivity
-version: 1.0.4
+version: 1.0.5
 author: SuZhan-Bubility
 ---
 
@@ -111,8 +111,8 @@ author: SuZhan-Bubility
 |---|---|---|
 | **A 手动问（唯一方式）** | 用户话里含 **"推荐大模型"** | 用户主动说才弹，绝不自作主张 |
 
-**主触发词：`推荐大模型`**（最简、最不易误触）。
-兼容变体（意思到了也触发）：`用什么模型` / `哪个模型合适` / `选哪个模型` / `选什么模型` / `模型推荐` / `你来推荐大模型` / `这活该用哪个模型`。
+**主触发词：`推荐大模型` / `用什么模型`**（前者最简、最不易误触；后者是最自然的口语说法，命中率很高）。
+兼容变体（意思到了也触发）：`哪个模型合适` / `选哪个模型` / `选什么模型` / `模型推荐` / `你来推荐大模型` / `这活该用哪个模型` / `这个任务用哪个大模型` / `该用哪个大模型`。
 
 **明确不做的事**：
 - ❌ **不挂载到其它 skill**（不要把本 skill 的调用塞进别的 skill 流程里）
