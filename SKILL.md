@@ -1,14 +1,14 @@
 ---
 name: workbuddy-model-advisor
 slug: workbuddy-model-advisor
-display_name: 模型推荐助手
-displayName: 模型推荐助手
+display_name: 大模型推荐助手
+displayName: 大模型推荐助手
 display_name_en: Model Advisor for WorkBuddy
-description: 给 WorkBuddy / CodeBuddy 用的模型推荐技能。把你的任务写进提示词，它就读懂你要干什么活——爬数据、做研究、写报告、写代码、做视频——然后按任务类型推荐最合适的大模型，不背排行榜。给两个角度供你挑：「做到最好」（不管花多少钱，挑能力最强的）和「性价比最高」（够用又最省钱）。每个推荐都带积分费率、上下文长度、性价比星级和建议的思考强度。说一句「推荐大模型」即可触发，说「用什么模型」「选哪个模型」「哪个模型合适」「模型推荐」也行。弹卡后会停下来，等你切换到推荐模型再接着做原任务。费率和折扣实时读取本机 WorkBuddy 配置，官方调价自动跟上，不用手动维护。
-description_zh: 把你的任务写进提示词，它读懂后按任务类型推荐最合适的大模型，给两个角度：做到最好（能力最强）与性价比最高（够用最省）。每个都带费率、上下文和星级，还会建议思考强度。说「推荐大模型」即可触发。
-description_en: Reads your prompt to understand the task type, then recommends the best LLM and reasoning effort accordingly — not just top-of-the-chart picks. Gives two angles: best quality and best value, each with cost, context size and a star rating. Just say the trigger phrase and it pauses for you to switch models.
+description: 实现根据你的提示词描述的任务类型，推荐最合适的大模型（WorkBuddy / CodeBuddy 专用）。根据不同的任务类型（爬数据、做研究、写报告、写代码、做视频等）给出两个角度的推荐：「做到最好」（不管花多少钱，挑能力最强的）和「性价比最高」（够用又最省钱），每个推荐都带积分费率、上下文长度、性价比星级和建议的思考强度。弹卡后会停下来，等你切换到推荐模型再接着做原任务。说「推荐大模型」「用什么模型」「选哪个模型」「哪个模型合适」「模型推荐」也能触发。费率和折扣实时读取本机 WorkBuddy 配置，官方调价自动跟上，不用手动维护。
+description_zh: 实现根据你的提示词描述的任务类型推荐最合适的大模型。按任务类型给出双角度推荐（做到最好 / 性价比最高），带积分费率、上下文长度与思考强度建议。说「推荐大模型」即可触发，弹卡后停下等你切模型。
+description_en: Recommends the best LLM based on the task type described in your prompt (WorkBuddy / CodeBuddy only). Gives two angles — best quality and best value — each with live pricing, context size and a suggested reasoning effort, then pauses for you to switch models.
 category: productivity
-version: 1.0.3
+version: 1.0.4
 author: SuZhan-Bubility
 ---
 
